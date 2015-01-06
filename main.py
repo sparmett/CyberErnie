@@ -85,10 +85,13 @@ def get_payments():
 @app.route('/get_friends', methods=["GET"])
 def get_friends():
     access_token = request.args.get('access_token')
+    friends = {}
     url = "https://sandbox-api.venmo.com/v1/users/" + session['venmo_id'] + "/friends?access_token=" + access_token
     response = requests.get(url)
     data = response.json()
-    return jsonify(data)
+    for friend in data['data']:
+        friends[friend['display_name']] = friend['id']
+    return jsonify(friends)
 
 
 """
