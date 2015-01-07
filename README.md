@@ -23,7 +23,7 @@ Install flask and requests
     pip install requests
 
 Run a setup script to create a couple of useful constants for your app, include a key to encrypt your sessions
-and placeholders for Venmo app credentials. These are used in "Venmo API Integration Example" below.
+and placeholders for Venmo app credentials.
 `python setup.py`
 
 How to run
