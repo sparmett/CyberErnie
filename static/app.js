@@ -1,10 +1,4 @@
-<html>
-  <head>
-    <script src="http://codeorigin.jquery.com/jquery-2.0.3.min.js"></script>
-    <link href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" rel="stylesheet"
-    <script src="//netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
-    <script type="text/javascript">
-        /**
+/**
             An example ajax implementation with the Venmo API.
             This makes a POST request to make a payment on Venmo.
         **/
@@ -74,15 +68,49 @@
                 $("#get_friends_response").text(error);
             });
         };
-    </script>
-  </head>
-  <body style="padding:25px">
-    <div class="container">
-        <div class="navbar navbar-default">
-                <a class="navbar-brand" href="/">Flaskeleton</a>
-        </div>
-    {% block content %}
-    {% endblock %}
-</div>
-  </body>
-</html>
+
+        function make_group(access_token) {
+            group_val = $("#group_raw").val();
+            post_parameters = {
+                group_raw:group_val
+            }
+            $.post("/make_group",
+                    post_parameters).done(function(response) {
+                        $("#make_group_response").text(response);
+                    }).fail(function(error) {
+                        $("#make_group_response").text(error);
+                    });
+        };
+
+        function get_groups(access_token) {
+            $.get("/get_groups").done(function(response) {
+                        $("#get_groups_response").text(response);
+                    }).fail(function(error) {
+                        $("#get_groups_response").text(error);
+                    });
+        };
+
+        function make_group_payment(access_token) {
+            groupNum = $("#groupNumber").val();
+            groupAmt = $("#groupAmt").val();
+            groupNote = $("#groupNote").val();            
+            groupUsernames = [];
+            var row = document.getElementById(groupNum);
+            for (i = 0; i < row.cells.length; i++){
+                if (row.cells[i].innerHTML != ""){
+                    groupUsernames.push(row.cells[i].innerHTML);
+                }
+            }
+            groupCSV = groupUsernames.toString();
+            post_parameters = {
+                groupUsernames:groupCSV,
+                groupAmt:groupAmt,
+                groupNote:groupNote
+            }
+            $.post("/make_group_payment",
+                    post_parameters).done(function(response) {
+                        $("#make_group_payment_response").text(response);
+                    }).fail(function(error) {
+                        $("#make_group_payment_response").text(error);
+                    });
+        };

@@ -1,12 +1,44 @@
-<section>
-    <div class="jumbotron">
-        <p>This is a plug-and-play Flask app that's meant to be a starting point for your own app.
-        The app has code written to do the following:</p>
-        <ul>
-            <li>Authenticate a user on Venmo with the server-side OAuth flow</li>
-            <li>Make a <b>real</b> payment on the Venmo api by issuing a HTTP POST request</li>
-            <li>Get a list of the user's recent transactions by issuing a HTTP GET request</li>
-            <li>Keep track of an authenticated user via sessions</li>
-        </ul>
-    </div>
-</section>
+<style>
+	body {
+		background: url(/static/bg_small.jpg) no-repeat center center fixed;
+		background-size: cover;
+	}
+</style>
+
+
+<html>
+	<body>
+		<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+		<link rel="stylesheet" href="{{ url_for('static', filename='morphext.css') }}">
+		<link rel="stylesheet" href="{{ url_for('static', filename='animate.css') }}">
+		<link rel="stylesheet" type="text/css" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
+		<link href='http://fonts.googleapis.com/css?family=Lato:400,700italic' rel='stylesheet' type='text/css'>
+		<script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+		<script src="{{ url_for('static', filename='morphext.min.js') }}"></script>
+		
+		<section>
+			<div class="header-info">
+		    	<h2>CyberErnie</h2>
+		    	<p>A better way to collect: <span id="js-rotating" class="label">BILLS, RENT, DUES</span></p>
+		    	<button class="btn btn-primary" ><a style="color:#fff" href="https://api.venmo.com/v1/oauth/authorize?client_id={{data.consumer_id}}&scope=make_payments,access_profile,access_friends&response_type=code">Authenticate with Venmo</a></button>
+		  	</div>
+		</section>
+		<script>
+
+				$("#js-rotating").Morphext({
+				    // The [in] animation type. Refer to Animate.css for a list of available animations.
+				    animation: "flipInX",
+				    // An array of phrases to rotate are created based on this separator. Change it if you wish to separate the phrases differently (e.g. So Simple | Very Doge | Much Wow | Such Cool).
+				    separator: ",",
+				    // The delay between the changing of each phrase in milliseconds.
+				    speed: 2500,
+				    complete: function () {
+				        // Called after the entrance animation is executed.
+				    }
+				});
+		</script>
+		</section>
+	</body>
+</html>
+
+
