@@ -1,6 +1,9 @@
 from flask import Flask, request, session, render_template, jsonify, redirect, url_for
 from constants import CONSUMER_ID, CONSUMER_SECRET, APP_SECRET
+from flask.ext.mysql import MySQL
+from pprint import pprint
 import requests
+import json
 """
 This file contains all the functions and routes for our demo app.
 """
@@ -8,6 +11,26 @@ app = Flask(__name__)
 # comment out when you're done testing
 app.debug = True
 app.secret_key = APP_SECRET #a secret string that will sign your session cookies
+
+mysql = MySQL()
+mysql.init_app(app)
+
+app.config['MYSQL_DATABASE_USER'] = ''
+app.config['MYSQL_DATABASE_PASSWORD'] = ''
+app.config['MYSQL_DATABASE_DB'] = ''
+app.config['MYSQL_DATABASE_HOST'] = ''
+
+qSet = [
+"INSERT INTO groups (ownerId, user1, user2, user3, user4, user5, user6, user7, user8, user9, user10) VALUES (%d, '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')",
+"INSERT INTO groups (ownerId, user1, user2, user3, user4, user5, user6, user7, user8, user9) VALUES (%d, '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')",
+"INSERT INTO groups (ownerId, user1, user2, user3, user4, user5, user6, user7, user8) VALUES (%d, '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')",
+"INSERT INTO groups (ownerId, user1, user2, user3, user4, user5, user6, user7) VALUES (%d, '%s', '%s', '%s', '%s', '%s', '%s', '%s')",
+"INSERT INTO groups (ownerId, user1, user2, user3, user4, user5, user6) VALUES (%d, '%s', '%s', '%s', '%s', '%s', '%s')",
+"INSERT INTO groups (ownerId, user1, user2, user3, user4, user5) VALUES (%d, '%s', '%s', '%s', '%s', '%s')",
+"INSERT INTO groups (ownerId, user1, user2, user3, user4) VALUES (%d, '%s', '%s', '%s', '%s')",
+"INSERT INTO groups (ownerId, user1, user2, user3) VALUES (%d, '%s', '%s', '%s')",
+"INSERT INTO groups (ownerId, user1, user2) VALUES (%d, '%s', '%s')"
+]
 
 """
 This is the function that will be called when users
@@ -29,11 +52,146 @@ def index():
                 'consumer_id': CONSUMER_ID,
             'access_token': session['venmo_token'],
             'signed_in': True}
-        return render_template('index.html', data=data)
+        conn = mysql.connect()
+        cursor = conn.cursor()
+
+        #db_data = cursor.fetchone()
+        #if db_data is None:
+        try:
+            query = "INSERT INTO user_tbl (username) VALUES ('%s')" % data['name']
+            cursor.execute(query)
+            conn.commit()
+        except:
+            pass
+
+        # get lists
+        currUser = session['venmo_username']
+        query = "SELECT id FROM user_tbl WHERE username = '%s'" % currUser
+        cursor.execute(query)
+        conn.commit()
+
+        currId = int(cursor.fetchone()[0])
+
+        listQuery = "SELECT * FROM groups WHERE ownerId = %d" % currId
+        cursor.execute(listQuery)
+        conn.commit()
+
+        lists = cursor.fetchall()
+        returnLists = map(list, lists)
+        listDicts = []
+        count = 1
+        for entry in returnLists:
+            localDict = {}
+            smallCount = 0
+            for smallEntry in entry:
+                if smallCount == 0:
+                    smallCount = smallCount + 1
+                elif smallCount == 1:
+                    smallCount = smallCount + 1
+                else:
+                    smallKey = str(smallCount - 1)
+                    localDict[smallKey] = smallEntry
+                    smallCount = smallCount + 1
+            listDicts.append(localDict)
+            count = count + 1
+        return render_template('/signedIn.html', data=data, returnLists=listDicts)
     else:
         data = {'signed_in': False,
         'consumer_id': CONSUMER_ID}
         return render_template('/index.html', data=data)
+
+@app.route('/make_group', methods=["POST"])
+def make_group():
+    conn = mysql.connect()
+    cursor = conn.cursor()
+    
+    group = request.form['group_raw']
+    group_split = group.split(',')
+    #access_token = request.args.get('access_token')
+    #print access_token
+    forKeyQ = "SELECT id FROM user_tbl WHERE username = '%s'" % session['venmo_username']
+    cursor.execute(forKeyQ)
+    conn.commit()
+
+    forKey = cursor.fetchone()[0]
+
+    for user in group_split:
+        url = 'https://api.venmo.com/v1/users/' + user + '?access_token=' + session['venmo_token']
+        response = requests.get(url)
+        if 'error' in response.json():
+            if response.json()['error']['code'] == 283:
+                return 'Bad user, check %s' % user
+        elif user == session['venmo_username']:
+            return 'Cannot list yourself!'
+    group_split.insert(0, forKey)
+    number = 8 - (len(group_split) - 3)
+    query = qSet[number] % tuple(group_split)
+    cursor.execute(query)
+    conn.commit()
+    return 'Successfully created new list'
+
+@app.route('/get_groups', methods=["GET"])
+def get_groups():
+    currUser = session['venmo_username']
+    conn = mysql.connect()
+    cursor = conn.cursor()
+    query = "SELECT id FROM user_tbl WHERE username = '%s'" % currUser
+    cursor.execute(query)
+    conn.commit()
+
+    currId = int(cursor.fetchone()[0])
+
+    listQuery = "SELECT * FROM groups WHERE ownerId = %d" % currId
+    cursor.execute(listQuery)
+    conn.commit()
+
+    lists = cursor.fetchall()
+    returnLists = map(list, lists)
+    print returnLists
+    return render_template('signedIn.html')
+
+@app.route('/make_group_payment', methods=["POST"])
+def make_group_payment():
+    groupUsernames = request.form['groupUsernames']
+    note = request.form['groupNote']
+    amount = request.form['groupAmt']
+
+    payload = {
+        "access_token":session['venmo_token'],
+        "note":note,
+        "amount":amount,
+    }
+    amountNum = float(amount)
+
+    usernameList = groupUsernames.split(',')
+    toReturn = ''
+    count = 0
+    for user in usernameList:
+        url = 'https://api.venmo.com/v1/users/' + user + '?access_token=' + session['venmo_token']
+        response = requests.get(url).json()
+        pprint(response)
+        payload['user_id'] = response['data']['id']
+        pprint(payload)
+        url = "https://api.venmo.com/v1/payments"
+        response = requests.post(url, payload)
+        data = response.json()
+        if 'error' in data:
+            return jsonify(data)
+        pprint(data)
+        if count < (len(usernameList) - 1):  
+            if amountNum < 0.00:
+                temp = "PAID %s to %s with the message: '%s'\n" % ("{0:.2f}".format(abs(amountNum)), user, note)
+            else:
+                temp = "CHARGED %s to %s with the message: '%s'\n" % ("{0:.2f}".format(abs(amountNum)), user, note)
+        else:
+            if amountNum < 0.00:
+                temp = "PAID %s to %s with the message: '%s'" % ("{0:.2f}".format(abs(amountNum)), user, note)
+            else:
+                temp = "CHARGED %s to %s with the message: '%s'" % ("{0:.2f}".format(abs(amountNum)), user, note)
+        toReturn = toReturn + temp
+        count = count + 1
+
+    return toReturn
 
 """
 Example app endpoints to make HTTP requests to a third party API.

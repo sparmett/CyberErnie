@@ -1,42 +1,95 @@
-<section>
-    <div class="well">
-        <h2>Venmo API Integration Example!</h2>
-        {% if data.consumer_id is not number %}
-            <p>To get started with our OAuth integration, you have to make a Venmo app first. Check out the <a href-"https://github.com/venmo/flaskeleton">README</a> for information on how to get our OAuth example up and running with Venmo!</p>
-        {% elif not data.signed_in %}
-            <p>Clicking this button will redirect you to the Venmo OAuth login page. Once the user logs in, they will be redirected back to your app, with their access_token in the redirect url. Your app can then grab that token using the flask request module.</p>
-            <button class="btn btn-primary" ><a style="color:#fff" href="https://api.venmo.com/v1/oauth/authorize?client_id={{data.consumer_id}}&scope=make_payments,access_profile,access_friends&response_type=code">Click here to authenticate with Venmo using OAuth</a></button>
-        {% else %}
-            <p>You are signed in as {{data.name}}.</p>
-            <button class="btn btn-warning" ><a style="color:#fff" href="logout">Logout!</a></button>
-            <h2>Make a payment on Venmo! <b>(Warning: this will use real money!!)</b></h2>
-                <div id="payment_note_input">
-                    <input id="payment_note" type="text" class="form-control" required placeholder="add a note to your payment">
+<body onload="myFunction()">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="stylesheet" type="text/css" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+  <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+  <section>
+      <div id="toplevel" class="container">
+          <nav id="specialNav" class="navbar navbar-default">
+              <div class="container-fluid">
+                <div class="navbar-header">
+                  <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                  </button>
+                  <a class="navbar-brand" href="#">CyberErnie</a>
                 </div>
-                <div id="payment_target_input" >
-                    <input id="payment_target" type="text" class="form-control" required placeholder="pay an email address">
-                </div>
-                <div id="payment_amount_input">
-                    <input id="payment_amount" type="text" class="form-control" required placeholder="enter the payment amount! ">
-                </div>
-                </br>
-                    <button class="btn btn-danger" type="button" onClick="javascript:make_payment('{{data.access_token}}');">POST to /payments</button>
-            <h3>Response:</h3>
-            <textarea id="make_payment_response" class="form-control" rows="3"></textarea>
+                <div id="navbar" class="navbar-collapse collapse">
+                  <ul class="nav navbar-nav navbar-right">
+                    <li><a href="#">{{ data.name }}</a></li>
+                    <li><a href="logout">Logout</a></li>
+                  </ul>
+                </div><!--/.nav-collapse -->
+              </div><!--/.container-fluid -->
+          </nav>
+          <h2>Make a goddamned group!</h2>
+          <div id="group_input">
+              <input id="group_raw" type="text" class="form-control" required placeholder="Comma-separated usernames please! Limit is ten users per list">
+          </br>
+              <button class="btn btn-primary" type="button" onClick="javascript:make_group('{{data.access_token}}');">Submit</button>
+          </div>
+          <h3>Response:</h3>
+          <textarea id="make_group_response" class="form-control" rows="3"></textarea>
         </br>
-            <h2>Get a list of your payments!</h2>
-            <div class="input-group">
-                <button class="btn btn-primary" type="button" onClick="javascript:get_payments('{{data.access_token}}');">Get your payments</button>
+            <div id="listsTbl" class="bs-example">
+              <div class="panel panel-default">
+                <!-- Default panel contents -->
+                <div id="panelHeader" class="panel-heading">Your Lists</div>
+                  <!-- Table -->
+                  <table class="table">
+                    <thead id="tblHeader">
+                      <tr>
+                        <th>User 1</th>
+                        <th>User 2</th>
+                        <th>User 3</th>
+                        <th>User 4</th>
+                        <th>User 5</th>
+                        <th>User 6</th>
+                        <th>User 7</th>
+                        <th>User 8</th>
+                        <th>User 9</th>
+                        <th>User 10</th>
+                      </tr>
+                    </thead>
+                    <tbody id="tblBody">
+                    </tbody>
+                  </table>
+              </div>
             </div>
-            </br>
-            <textarea class="form-control" id="get_payments_response" rows="10"></textarea>
-        </br>
-            <h2>Get a list of your friends!</h2>
-            <div class="input-group">
-                <button class="btn btn-primary" type="button" onClick="javascript:get_friends('{{data.access_token}}');">Get your payments</button>
-            </div>
-            </br>
-            <textarea class="form-control" id="get_friends_response" rows="10"></textarea>
-        {% endif %}
+            <h2>Pay a goddamned group!</h2>
+          <div id="group_input">
+              <input id="groupNumber" type="text" class="form-control" required placeholder="Group number">
+              <input id="groupAmt" type="text" class="form-control" required placeholder="Payment per user, submit a negative number to charge!">
+              <input id="groupNote" type="text" class="form-control" required placeholder="Non-specific note">
+          </br>
+              <button class="btn btn-primary" type="button" onClick="javascript:make_group_payment('{{data.access_token}}');">Submit</button>
+          <h3>Response:</h3>
+              <textarea id="make_group_payment_response" class="form-control" rows="3"></textarea>
+          </br>
     </div>
-</section>
+  </section>
+
+  <script>
+      function myFunction() {
+          var lists = document.getElementById("tblBody");
+          retLists = {{ returnLists|tojson }};
+          var length = retLists.length;
+          count = 0;
+          while (count < length){
+            var row = document.createElement("tr");
+            rowNum = count + 1;
+            row.setAttribute("id", rowNum);
+            var obj = retLists[count];
+            for(var key in obj) {
+              var td = document.createElement("td");
+              td.innerHTML = obj[key];
+              row.appendChild(td);
+            }
+            lists.appendChild(row);
+            count = count + 1;
+          }
+      }
+  </script>
+</body>
