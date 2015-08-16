@@ -15,10 +15,10 @@ app.secret_key = APP_SECRET #a secret string that will sign your session cookies
 mysql = MySQL()
 mysql.init_app(app)
 
-app.config['MYSQL_DATABASE_USER'] = 'root'
+app.config['MYSQL_DATABASE_USER'] = ''
 app.config['MYSQL_DATABASE_PASSWORD'] = ''
-app.config['MYSQL_DATABASE_DB'] = 'ErnieBrain'
-app.config['MYSQL_DATABASE_HOST'] = 'localhost'
+app.config['MYSQL_DATABASE_DB'] = ''
+app.config['MYSQL_DATABASE_HOST'] = ''
 
 qSet = [
 "INSERT INTO groups (ownerId, user1, user2, user3, user4, user5, user6, user7, user8, user9, user10) VALUES (%d, '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')",
