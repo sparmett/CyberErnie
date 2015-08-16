@@ -1,6 +1,9 @@
 CyberErnie - a webapp dedicated to enabling saved group payments via the Venmo API.
 ===============================================================================
+Demo: http://sparmett.pythonanywhere.com
 
+Documentation
+-----------
 A Flask app that allows saved group payments via the Venmo API. After a user logs in, he/she is able to create chargable groups that are persistent across sessions.
 
 Venmo API documentation available [here](http://venmo.com/api).
