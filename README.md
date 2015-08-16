@@ -19,8 +19,7 @@ Clone this repo to a local directory on your computer. Navigate to the directory
 
 Install flask and requests
 
-    pip install flask
-    pip install requests
+    pip install -r requirements.txt
 
 Run a setup script to create a couple of useful constants for your app, include a key to encrypt your sessions
 and placeholders for Venmo app credentials.
@@ -36,3 +35,7 @@ That's all (make sure you have that constants file, constants.py, and you have i
 That's it!
 ----------
 Now get charging!
+
+TODO!
+----------
+JSON list implementation (eliminating list size cap)
