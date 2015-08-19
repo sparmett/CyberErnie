@@ -169,9 +169,7 @@ def make_group_payment():
     for user in usernameList:
         url = 'https://api.venmo.com/v1/users/' + user + '?access_token=' + session['venmo_token']
         response = requests.get(url).json()
-        pprint(response)
         payload['user_id'] = response['data']['id']
-        pprint(payload)
         url = "https://api.venmo.com/v1/payments"
         response = requests.post(url, payload)
         data = response.json()
@@ -180,23 +178,21 @@ def make_group_payment():
         pprint(data)
         if count < (len(usernameList) - 1):  
             if amountNum < 0.00:
-                temp = "PAID %s to %s with the message: '%s'\n" % ("{0:.2f}".format(abs(amountNum)), user, note)
-            else:
                 temp = "CHARGED %s to %s with the message: '%s'\n" % ("{0:.2f}".format(abs(amountNum)), user, note)
+            else:
+                temp = "PAID %s to %s with the message: '%s'\n" % ("{0:.2f}".format(abs(amountNum)), user, note)
         else:
             if amountNum < 0.00:
-                temp = "PAID %s to %s with the message: '%s'" % ("{0:.2f}".format(abs(amountNum)), user, note)
-            else:
                 temp = "CHARGED %s to %s with the message: '%s'" % ("{0:.2f}".format(abs(amountNum)), user, note)
+            else:
+                temp = "PAID %s to %s with the message: '%s'" % ("{0:.2f}".format(abs(amountNum)), user, note)
         toReturn = toReturn + temp
         count = count + 1
 
     return toReturn
 
 """
-Example app endpoints to make HTTP requests to a third party API.
-In this example, we make POST and GET requests to the Venmo API to
-make a sandbox payment and get your 20 most recent payments on Venmo, respectively.
+Endpoint making individual payment
 """
 @app.route('/make_payment', methods=["POST"])
 def make_payment():
@@ -253,10 +249,7 @@ def get_friends():
 
 
 """
-Example app endpoint that will handle OAuth server-side authentication.
-This is the endpoint that Venmo will redirect once a user has successfully logged
-in to your Venmo app. For more information on Venmo OAuth and the whole flow, check out
-beta-developer.venmo.com/oauth.
+Handle OAuth workflow
 """
 @app.route('/oauth-authorized')
 def oauth_authorized():
