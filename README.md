@@ -42,3 +42,4 @@ Now get charging!
 TODO!
 ----------
 JSON list implementation (eliminating list size cap)
+Overhaul front-end design for payments screen
