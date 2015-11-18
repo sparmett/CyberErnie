@@ -42,6 +42,7 @@ Now get charging!
 TODO!
 ----------
 Create a more robust relational DB to eliminate list size cap
+
 ~~JSON list implementation (eliminating list size cap)~~
 
 Overhaul front-end design for payments screen
